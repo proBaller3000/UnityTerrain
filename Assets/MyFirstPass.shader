@@ -6,6 +6,39 @@ Shader "Nature/Terrain/Diffuse" {
         [HideInInspector] _MainTex ("BaseMap (RGB)", 2D) = "white" {}
         [HideInInspector] _Color ("Main Color", Color) = (1,1,1,1)
         [HideInInspector] _TerrainHolesTexture("Holes Map (RGB)", 2D) = "white" {}
+
+        [Header(Main)]  
+        _Noise("Snow Noise", 2D) = "gray" {}    
+        _NoiseScale("Noise Scale", Range(0,2)) = 0.1
+        _NoiseWeight("Noise Weight", Range(0,2)) = 0.1
+        [Space]
+        [Header(Tesselation)]
+        _MaxTessDistance("Max Tessellation Distance", Range(10,100)) = 50
+        _Tess("Tessellation", Range(1,32)) = 20
+        [Space]
+        [Header(Snow)]
+        [HDR]_Color("Snow Color", Color) = (0.5,0.5,0.5,1)
+        // _MainTex("Snow Texture", 2D) = "white" {}       
+        _SnowHeight("Snow Height", Range(0,2)) = 0.3
+        _SnowTextureOpacity("Snow Texture Opacity", Range(0,1)) = 0.3
+        _SnowTextureScale("Snow Texture Scale", Range(0,2)) = 0.3
+
+        [Space]
+        [Header(Snow Path)]
+        _PathBlending("Path Color Blending", Range(0,3)) = 2
+        _SnowPathStrength("Snow Path Smoothness", Range(0,4)) = 2
+        [HDR]_PathColorIn("Snow Path Color", Color) = (1,1,1,1)
+        [HDR]_PathColorOut("Snow Path Color2", Color) = (0.5,0.5,1,1)
+        
+        [Space]
+        [Header(Sparkles)]
+        _SparkleScale("Sparkle Scale", Range(0,10)) = 10
+        _SparkCutoff("Sparkle Cutoff", Range(0,10)) = 0.9
+        _SparkleNoise("Sparkle Noise", 2D) = "gray" {}
+        [Space]
+        [Header(Rim)]
+        _RimPower("Rim Power", Range(0,20)) = 20
+        [HDR]_RimColor("Rim Color Snow", Color) = (0.5,0.5,0.5,1)
     }
 
     CGINCLUDE
@@ -13,6 +46,42 @@ Shader "Nature/Terrain/Diffuse" {
         #pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap forwardadd
         #pragma multi_compile_fog
         #include "Assets/MyTerrainSplatmapCommon.cginc"
+
+        #pragma require tessellation tessHW
+        #include "Tessellation.cginc"
+
+        // uniform float3 _Position;
+        // uniform sampler2D _GlobalEffectRT;
+        // uniform float _OrthographicCamSize;
+
+        float _Tess;
+        float _MaxTessDistance;
+
+        float CalcDistanceTessFactor(float4 vertex, float minDist, float maxDist, float tess)
+        {
+            float3 worldPosition = mul(unity_ObjectToWorld, vertex).xyz;
+            float dist = distance(worldPosition, _WorldSpaceCameraPos);
+            float f = clamp(1.0 - (dist - minDist) / (maxDist - minDist), 0.01, 1.0);
+            return f * tess;
+        }
+
+        float4 DistanceBasedTess(float4 v0, float4 v1, float4 v2, float minDist, float maxDist, float tess)
+        {
+            float3 f;
+            f.x = CalcDistanceTessFactor(v0, minDist, maxDist, tess);
+            f.y = CalcDistanceTessFactor(v1, minDist, maxDist, tess);
+            f.z = CalcDistanceTessFactor(v2, minDist, maxDist, tess);
+
+            return UnityCalcTriEdgeTessFactors(f);
+        }
+
+        float4 tessDistance(appdata_full v0, appdata_full v1, appdata_full v2)
+        {
+            float minDist = 10.0;
+            float maxDist = _MaxTessDistance;
+
+            return DistanceBasedTess(v0.vertex, v1.vertex, v2.vertex, minDist, maxDist, _Tess);
+        }
 
         void surf(Input IN, inout SurfaceOutput o)
         {

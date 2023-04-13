@@ -32,6 +32,49 @@ float4 _Control_TexelSize;
 sampler2D _Splat0, _Splat1, _Splat2, _Splat3;
 float4 _Splat0_ST, _Splat1_ST, _Splat2_ST, _Splat3_ST;
 
+sampler2D _Noise, _SparkleNoise;
+        float4 _Color, _RimColor;
+        float _RimPower;
+        float _SnowTextureScale, _NoiseScale;
+        float _SnowHeight, _SnowPathStrength;
+        float4 _PathColorIn, _PathColorOut;
+        float _PathBlending;
+        float _NoiseWeight;
+        float _SparkleScale, _SparkCutoff;
+        float _SnowTextureOpacity;
+
+        uniform float3 _Position;
+        uniform sampler2D _GlobalEffectRT;
+        uniform float _OrthographicCamSize;
+
+        // struct Input {
+        //     float2 uv_MainTex : TEXCOORD0;
+        //     float3 worldPos; // world position built-in value
+        //     float3 viewDir;// view direction built-in value we're using for rimlight
+        // };
+
+        void vert(inout appdata_full v)
+        {   
+            
+            float3 worldPosition = mul(unity_ObjectToWorld, v.vertex).xyz;
+            // // Effects RenderTexture Reading
+            float2 uv = worldPosition.xz - _Position.xz;
+            uv = uv / (_OrthographicCamSize * 2);
+            uv += 0.5;          
+            float4 RTEffect = tex2Dlod(_GlobalEffectRT, float4(uv, 0, 0));
+            
+            // // smoothstep edges to prevent bleeding
+            RTEffect *=  smoothstep(0.99, 0.9, uv.x) * smoothstep(0.99, 0.9,1- uv.x);
+            RTEffect *=  smoothstep(0.99, 0.9, uv.y) * smoothstep(0.99, 0.9,1- uv.y);
+            
+            // // Snow Noise in worldSpace
+            // float SnowNoise = tex2Dlod(_Noise, float4(worldPosition.xz * _NoiseScale, 0, 0));
+            
+            // move vertices up where snow is, and where there is no path   
+            v.vertex.xyz += normalize(v.normal) * 2 * saturate(1-RTEffect.g * 2);// *(_SnowHeight + (SnowNoise * _NoiseWeight)) * saturate(1-RTEffect.g * _SnowPathStrength);
+
+        }
+
 #if defined(UNITY_INSTANCING_ENABLED) && !defined(SHADER_API_D3D11_9X)
     // Some drivers have undefined behaviors when samplers are used from the vertex shader
     // with anisotropic filtering enabled. This causes some artifacts on some devices. To be
@@ -119,7 +162,8 @@ void SplatmapVert(inout appdata_full v, out Input data)
     v.tangent.w = -1;
 
     //My Snow height modification
-    v.vertex.xyz += normalize(v.normal) * .4;
+    // v.vertex.xyz += normalize(v.normal) * .4;
+    vert(v);
 
     data.tc.xy = v.texcoord.xy;
 #ifdef TERRAIN_BASE_PASS
