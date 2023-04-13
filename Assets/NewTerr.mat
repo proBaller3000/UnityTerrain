@@ -24,12 +24,35 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Noise:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SparkleNoise:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _TerrainHolesTexture:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
+    m_Floats:
+    - _MaxTessDistance: 70
+    - _NoiseScale: 0.1
+    - _NoiseWeight: 0.1
+    - _PathBlending: 2
+    - _RimPower: 20
+    - _SnowHeight: 0.3
+    - _SnowPathStrength: 2
+    - _SnowTextureOpacity: 0.3
+    - _SnowTextureScale: 0.3
+    - _SparkCutoff: 0.9
+    - _SparkleScale: 10
+    - _Tess: 32
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _PathColorIn: {r: 1, g: 1, b: 1, a: 1}
+    - _PathColorOut: {r: 0.5, g: 0.5, b: 1, a: 1}
+    - _RimColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_BuildTextureStacks: []
