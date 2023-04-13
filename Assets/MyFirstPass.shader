@@ -46,7 +46,7 @@ Shader "Nature/Terrain/Diffuse" {
         #pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap forwardadd
         #pragma multi_compile_fog
         #include "Assets/MyTerrainSplatmapCommon.cginc"
-
+        #pragma tessellate:tessDistance
         #pragma require tessellation tessHW
         #include "Tessellation.cginc"
 
