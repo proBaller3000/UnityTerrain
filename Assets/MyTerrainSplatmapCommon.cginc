@@ -119,7 +119,7 @@ void SplatmapVert(inout appdata_full v, out Input data)
     v.tangent.w = -1;
 
     //My Snow height modification
-    v.vertex.xyz += normalize(v.normal) * 2;
+    v.vertex.xyz += normalize(v.normal) * .4;
 
     data.tc.xy = v.texcoord.xy;
 #ifdef TERRAIN_BASE_PASS
